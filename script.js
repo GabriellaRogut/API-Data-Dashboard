@@ -9,11 +9,22 @@ document.addEventListener("DOMContentLoaded", function() {
 
     var errorsCount = 0;
 
+
     // ======= UPDATE BADGES =======
     function updateBadges() {
         totalProductsBadge.textContent = "Total Products: " + tableBody.rows.length;
         errorsBadge.textContent = "Errors Today: " + errorsCount;
     }
+
+
+    // ======= CLOSE MESSAGE =======
+    var messageBox = document.getElementById("message-box");
+    var messageClose = document.getElementById("MessageClose");
+
+    messageClose.addEventListener("click", function () {
+        messageBox.style.display = "none";
+    });
+
 
     // ======= LOAD PRODUCTS =======
     loadBtn.addEventListener("click", function() {
@@ -69,6 +80,7 @@ document.addEventListener("DOMContentLoaded", function() {
     var btnYes = deleteModal.querySelector(".btn-yes");
     var btnNo = deleteModal.querySelector(".btn-no");
     var closeBtn = deleteModal.querySelector(".close");
+    var mssgSuccess = document.getElementById("message-box");
 
     var rowToDelete = null;
 
@@ -93,6 +105,20 @@ document.addEventListener("DOMContentLoaded", function() {
             deleteModal.style.display = "none";
             rowToDelete = null;
             updateBadges();
+
+            mssgSuccess.style.display = "block";
+            mssgSuccess.querySelector(".mssg").innerHTML = "<span style='color: rgb(135, 177, 135);'>&#10004;</span> Item Deleted Successfully.";
+
+            setTimeout(() => {
+                mssgSuccess.classList.add("slide-out");
+
+                setTimeout(() => {
+                    mssgSuccess.style.display = "none";
+                    mssgSuccess.classList.remove("slide-out");
+                }, 600);
+
+            }, 2000);
+
         })
         .catch(function(err) {
             console.log("Delete failed:", err);
@@ -203,6 +229,19 @@ document.addEventListener("DOMContentLoaded", function() {
 
             updateModal.style.display = "none";
             updateBadges();
+
+            mssgSuccess.style.display = "block";
+            mssgSuccess.querySelector(".mssg").innerHTML = "<span style='color: rgb(135, 177, 135);'>&#10004;</span> Item Updated Successfully.";
+
+            setTimeout(() => {
+                mssgSuccess.classList.add("slide-out");
+
+                setTimeout(() => {
+                    mssgSuccess.style.display = "none";
+                    mssgSuccess.classList.remove("slide-out");
+                }, 600);
+
+            }, 2000);
         })
         .catch(function(err) {
             console.log(err);
@@ -265,27 +304,36 @@ document.addEventListener("DOMContentLoaded", function() {
         setTimeout(function() {
             addSpinner.style.display = 'none';
 
-            var newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td>New</td>
-                <td><img src="${image}" alt="${title}"></td>
-                <td>${title}</td>
-                <td>$${price.toFixed(2)}</td>
-                <td>${category}</td>
-                <td>${description}</td>
-                <td>
-                    <div class="table-actions">
-                        <button class="btn-del">Delete</button>
-                        <button class="btn-upd">Update</button>
-                    </div>
-                </td>
-            `;
-            tableBody.appendChild(newRow);
+            fetch("https://api.escuelajs.co/api/v1/products/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title,
+                    price,
+                    description,
+                    categoryId: 1,
+                    images: [image]
+                })
+            })
+
 
             addForm.reset();
             addModal.style.display = 'none';
             document.body.classList.remove('modal-open');
             updateBadges();
+
+            mssgSuccess.style.display = "block";
+            mssgSuccess.querySelector(".mssg").innerHTML = "<span style='color: rgb(135, 177, 135);'>&#10004;</span> Item Added Successfully.";
+
+            setTimeout(() => {
+                mssgSuccess.classList.add("slide-out");
+
+                setTimeout(() => {
+                    mssgSuccess.style.display = "none";
+                    mssgSuccess.classList.remove("slide-out");
+                }, 600);
+
+            }, 2000);
         }, 1000);
     });
 

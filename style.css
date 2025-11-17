@@ -390,3 +390,54 @@ header p {
 body.modal-open {
     overflow: hidden;
 }
+
+/* message */
+.mssg-box {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    right: 0;
+    top: 0;
+    width: 280px;
+    height: 67px;
+    background-color: #f3f3f3;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 18px;
+    border-radius: 6px;
+    border: solid  3px #cacaca;
+    margin: 8px;
+    animation: slideIn 0.6s ease forwards;
+}
+
+.close-msg {
+    top: 0 !important;
+    right: 10px !important;
+}
+
+.slide-out {
+    animation: slideOut 0.6s ease forwards;
+}
+
+@keyframes slideIn {
+    from {
+        right: -300px;
+        opacity: 0;
+    }
+    to {
+        right: 8px;
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        right: 8px;
+        opacity: 1;
+    }
+    to {
+        right: -300px;
+        opacity: 0;
+    }
+}
