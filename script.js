@@ -55,8 +55,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     <td>${p.description}</td>
                     <td>
                         <div class="table-actions">
-                            <button class="btn-del">Delete</button>
-                            <button class="btn-upd">Update</button>
+                            <button class="btn-del"><i class="fa-solid fa-trash"></i> Delete</button>
+                            <button class="btn-upd"><i class="fa-solid fa-file-pen"></i> Update</button>
                         </div>
                     </td>
                 `;
@@ -85,11 +85,13 @@ document.addEventListener("DOMContentLoaded", function() {
     var rowToDelete = null;
 
     tableBody.addEventListener("click", function(e) {
-        if (e.target.classList.contains("btn-del")) {
-            rowToDelete = e.target.closest("tr");
-            deleteModal.style.display = "block";
+        const btn = e.target.closest(".btn-del");
+        if (btn) {
+            rowToDelete = btn.closest("tr");
+            deleteModal.style.display = "flex";
         }
     });
+
 
     btnYes.addEventListener("click", function() {
         if (!rowToDelete) return;
@@ -155,25 +157,56 @@ document.addEventListener("DOMContentLoaded", function() {
     var updCloseBtn = updateModal.querySelector(".close");
     var errorMsg = updateForm.querySelector(".error-msg");
     var spinner = updateForm.querySelector(".spinner");
+    var updateCategorySelect = document.getElementById("updateCategorySelect");
 
     var currentRow = null;
     var currentProductId = null;
 
+    // ======= FETCH CATEGORIES & POPULATE SELECT =======
+    var categoriesMap = {}; // { "clothes": 1, "electronics": 2, ... }
+
+    fetch("https://api.escuelajs.co/api/v1/categories")
+        .then(res => res.json())
+        .then(categories => {
+            categories.forEach(cat => {
+                categoriesMap[cat.name.toLowerCase()] = cat.id;
+
+                // update modal select
+                var option = document.createElement("option");
+                option.value = cat.id;
+                option.textContent = cat.name;
+                updateCategorySelect.appendChild(option);
+            });
+        })
+        .catch(err => console.log("Error fetching categories:", err));
+
+    // OPEN MODAL WITH PRODUCT DATA 
     tableBody.addEventListener("click", function(e) {
-        if (e.target.classList.contains("btn-upd")) {
-            currentRow = e.target.closest("tr");
+        const btn = e.target.closest(".btn-upd");
+        if (btn) {
+            currentRow = btn.closest("tr");
             currentProductId = currentRow.cells[0].innerText;
 
             updateForm.title.value = currentRow.cells[2].innerText;
             updateForm.price.value = parseFloat(currentRow.cells[3].innerText.replace("$", ""));
             updateForm.description.value = currentRow.cells[5].innerText;
-            updateForm.category.value = currentRow.cells[4].innerText;
             updateForm.image.value = currentRow.cells[1].querySelector("img").src;
+
+            // Set selected category in dropdown
+            var categoryName = currentRow.cells[4].innerText;
+            for (var i = 0; i < updateCategorySelect.options.length; i++) {
+                if (updateCategorySelect.options[i].text === categoryName) {
+                    updateCategorySelect.selectedIndex = i;
+                    break;
+                }
+            }
 
             updateModal.style.display = "flex";
         }
     });
 
+
+    // close modal
     updCloseBtn.addEventListener("click", function() {
         updateModal.style.display = "none";
         errorMsg.style.display = "none";
@@ -186,16 +219,18 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
+    // SUBMIT UPDATE
     updateForm.addEventListener("submit", function(e) {
         e.preventDefault();
 
         var title = updateForm.title.value.trim();
         var price = parseFloat(updateForm.price.value);
         var description = updateForm.description.value.trim();
-        var category = updateForm.category.value.trim();
         var image = updateForm.image.value.trim();
+        var categoryId = parseInt(updateCategorySelect.value);
+        var categoryName = updateCategorySelect.options[updateCategorySelect.selectedIndex].text;
 
-        if (!title || !description || !category || !image || isNaN(price) || price <= 0) {
+        if (!title || !description || !image || isNaN(price) || price <= 0) {
             errorMsg.textContent = "Please fill all fields correctly.";
             errorMsg.style.display = "block";
             return;
@@ -205,14 +240,14 @@ document.addEventListener("DOMContentLoaded", function() {
         errorMsg.style.display = "none";
         activeCallsBadge.textContent = "Active API Calls: 1";
 
-        fetch("https://api.escuelajs.co/api/v1/products/" + currentProductId, {
+        fetch(`https://api.escuelajs.co/api/v1/products/${currentProductId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 title: title,
                 price: price,
                 description: description,
-                categoryId: 1,
+                category: { id: categoryId },
                 images: [image]
             })
         })
@@ -221,10 +256,11 @@ document.addEventListener("DOMContentLoaded", function() {
             return res.json();
         })
         .then(function(updatedProduct) {
+            // Update table row
             currentRow.cells[1].querySelector("img").src = updatedProduct.images[0] || "";
             currentRow.cells[2].innerText = updatedProduct.title;
             currentRow.cells[3].innerText = "$" + updatedProduct.price;
-            currentRow.cells[4].innerText = updatedProduct.category && updatedProduct.category.name ? updatedProduct.category.name : category;
+            currentRow.cells[4].innerText = categoryName;
             currentRow.cells[5].innerText = updatedProduct.description;
 
             updateModal.style.display = "none";
@@ -235,12 +271,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
             setTimeout(() => {
                 mssgSuccess.classList.add("slide-out");
-
                 setTimeout(() => {
                     mssgSuccess.style.display = "none";
                     mssgSuccess.classList.remove("slide-out");
                 }, 600);
-
             }, 2000);
         })
         .catch(function(err) {
@@ -258,68 +292,102 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
     // ======= ADD PRODUCT =======
-    var addModal = document.getElementById('addModal');
-    var addBtn = document.querySelector('.actions-container button:nth-child(2)');
-    var addClose = document.getElementById('addClose');
-    var addForm = document.getElementById('addForm');
-    var addErrorMsg = addForm.querySelector('.error-msg');
-    var addSpinner = addForm.querySelector('.spinner');
+    var addBtn = document.querySelector(".actions-container button:nth-child(2)"); // Add Data button
+    var addModal = document.getElementById("addModal");
+    var addForm = document.getElementById("addForm");
+    var addCloseBtn = document.getElementById("addClose");
+    var addErrorMsg = addForm.querySelector(".error-msg");
+    var addSpinner = addForm.querySelector(".spinner");
+    var addCategorySelect = document.getElementById("addCategorySelect");
 
-    addBtn.addEventListener('click', function() {
-        addModal.style.display = 'flex';
-        document.body.classList.add('modal-open');
+    // Populate Add Category Dropdown
+    fetch("https://api.escuelajs.co/api/v1/categories")
+        .then(res => res.json())
+        .then(categories => {
+            categories.forEach(cat => {
+                var option = document.createElement("option");
+                option.value = cat.id;
+                option.textContent = cat.name;
+                addCategorySelect.appendChild(option);
+            });
+        })
+        .catch(err => console.log("Error fetching categories:", err));
+
+    // ======= OPEN MODAL =======
+    addBtn.addEventListener("click", function() {
+        addForm.reset();
+        addErrorMsg.style.display = "none";
+        addModal.style.display = "flex";
     });
 
-    addClose.addEventListener('click', function() {
-        addModal.style.display = 'none';
-        document.body.classList.remove('modal-open');
+    // ======= CLOSE MODAL =======
+    addCloseBtn.addEventListener("click", function() {
+        addModal.style.display = "none";
+        addErrorMsg.style.display = "none";
     });
 
-    window.addEventListener('click', function(e) {
+    window.addEventListener("click", function(e) {
         if (e.target === addModal) {
-            addModal.style.display = 'none';
-            document.body.classList.remove('modal-open');
+            addModal.style.display = "none";
+            addErrorMsg.style.display = "none";
         }
     });
 
-    addForm.addEventListener('submit', function(e) {
+    // ======= SUBMIT ADD FORM =======
+    addForm.addEventListener("submit", function(e) {
         e.preventDefault();
 
         var title = addForm.title.value.trim();
         var price = parseFloat(addForm.price.value);
         var description = addForm.description.value.trim();
         var image = addForm.image.value.trim();
-        var category = addForm.category.value.trim();
+        var categoryId = parseInt(addCategorySelect.value);
+        var categoryName = addCategorySelect.options[addCategorySelect.selectedIndex].text;
 
-        if (!title || !description || !category || !image || isNaN(price) || price <= 0) {
-            addErrorMsg.innerHTML = "&#9888; Please fill all fields correctly.";
-            addErrorMsg.style.display = 'block';
+        if (!title || !description || !image || isNaN(price) || price <= 0) {
+            addErrorMsg.textContent = "Please fill all fields correctly.";
+            addErrorMsg.style.display = "block";
             return;
-        } else {
-            addErrorMsg.style.display = 'none';
         }
 
-        addSpinner.style.display = 'inline-block';
+        addSpinner.style.display = "inline-block";
+        addErrorMsg.style.display = "none";
+        activeCallsBadge.textContent = "Active API Calls: 1";
 
-        setTimeout(function() {
-            addSpinner.style.display = 'none';
-
-            fetch("https://api.escuelajs.co/api/v1/products/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    title,
-                    price,
-                    description,
-                    categoryId: 1,
-                    images: [image]
-                })
+        fetch("https://api.escuelajs.co/api/v1/products/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title: title,
+                price: price,
+                description: description,
+                categoryId: categoryId,
+                images: [image]
             })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Add product failed");
+            return res.json();
+        })
+        .then(newProduct => {
+            var tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${newProduct.id}</td>
+                <td><img src="${newProduct.images[0] || ''}" alt="${newProduct.title}"></td>
+                <td>${newProduct.title}</td>
+                <td>$${newProduct.price}</td>
+                <td>${categoryName}</td>
+                <td>${newProduct.description}</td>
+                <td>
+                    <div class="table-actions">
+                        <button class="btn-del"><i class="fa-solid fa-trash"></i> Delete</button>
+                        <button class="btn-upd"><i class="fa-solid fa-file-pen"></i> Update</button>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(tr);
 
-
-            addForm.reset();
-            addModal.style.display = 'none';
-            document.body.classList.remove('modal-open');
+            addModal.style.display = "none";
             updateBadges();
 
             mssgSuccess.style.display = "block";
@@ -327,15 +395,53 @@ document.addEventListener("DOMContentLoaded", function() {
 
             setTimeout(() => {
                 mssgSuccess.classList.add("slide-out");
-
                 setTimeout(() => {
                     mssgSuccess.style.display = "none";
                     mssgSuccess.classList.remove("slide-out");
                 }, 600);
-
             }, 2000);
-        }, 1000);
+        })
+        .catch(err => {
+            console.log(err);
+            errorsCount++;
+            addErrorMsg.innerHTML = "&#9888; Error adding product. Please try again.";
+            addErrorMsg.style.display = "block";
+            updateBadges();
+        })
+        .finally(() => {
+            addSpinner.style.display = "none";
+            activeCallsBadge.textContent = "Active API Calls: 0";
+        });
     });
+
+
+
+    // download pdf
+    const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+
+    downloadPdfBtn.addEventListener("click", function() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Gather table headers
+        const headers = Array.from(document.querySelectorAll(".info-table th")).map(th => th.innerText);
+
+        // Gather table rows
+        const rows = Array.from(document.querySelectorAll(".info-table tbody tr")).map(tr => {
+            return Array.from(tr.cells).map(td => td.innerText);
+        });
+
+        // Generate table in PDF
+        doc.autoTable({
+            head: [headers],
+            body: rows,
+            startY: 10,
+            styles: { fontSize: 8 }
+        });
+
+        doc.save("products.pdf");
+    });
+
 
 });
 

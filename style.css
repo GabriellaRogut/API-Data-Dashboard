@@ -319,7 +319,8 @@ header p {
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.select-field {
     width: 100%;
     padding: 8px 12px;
     border-radius: 6px;
@@ -330,7 +331,8 @@ header p {
 }
 
 .form-group input:focus,
-.form-group textarea:focus {
+.form-group textarea:focus,
+.select-field:focus {
     border-color: var(--mute-blue);
 }
 
@@ -441,3 +443,221 @@ body.modal-open {
         opacity: 0;
     }
 }
+
+
+
+
+/* MEDIA QUERIES */
+@media (max-width: 1200px) {
+    .actions-container {
+        width: 80%;
+        padding: 2rem;
+    }
+
+    .info-container {
+        width: 95%;
+        padding: 1.5rem;
+    }
+
+    .info-table td:nth-child(7) {
+        width: 200px;
+    }
+
+    .upd-modal-content {
+        width: 90%;
+        padding: 1.5rem;
+    }
+
+    .del-modal-content {
+        width: 85%;
+        padding: 1.5rem;
+    }
+}
+
+
+@media (max-width: 992px) {
+    /* Hide text, keep icon */
+    .btn-del, .btn-upd {
+        font-size: 0; /* remove text spacing */
+    }
+
+    .btn-del i, .btn-upd i {
+        font-size: 0.8rem;
+    }
+
+    /* Optional: make buttons square */
+    .btn-del, .btn-upd {
+        width: 30px;
+        height: 30px;
+    }
+
+
+    header {
+        padding: 1.5rem 1rem;
+    }
+
+    header h1 {
+        font-size: 1.75rem;
+    }
+
+    header p {
+        font-size: 0.95rem;
+    }
+
+    .badges-container {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .actions-container button {
+        width: 120px;
+        margin: 0.5rem;
+    }
+
+    .info-table img {
+        width: 50px;
+        height: 50px;
+    }
+
+    .info-table td:nth-child(7) {
+        width: 160px;
+    }
+
+    .info-container {
+        overflow-x: auto;
+    }
+}
+
+
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.5rem;
+    }
+
+    header p {
+        font-size: 0.85rem;
+    }
+
+    .actions-container {
+        width: 95%;
+        padding: 1.25rem;
+    }
+
+    .actions-container button {
+        width: 100%;
+        padding: 0.75rem 0;
+        font-size: 0.9rem;
+    }
+
+    .badges-container {
+        flex-direction: column;
+        gap: 0.4rem;
+        align-items: center;
+    }
+
+    .info-table th, .info-table td {
+        padding: 0.5rem 0.4rem;
+        font-size: 0.85rem;
+    }
+
+    .info-table img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .upd-modal-content, .del-modal-content {
+        width: 90%;
+        margin: 20% auto;
+        padding: 1rem;
+    }
+
+    .del-modal-actions, .form-actions {
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .del-modal-content {
+        margin: 0;
+    }
+
+    .modal {
+        justify-content: center;
+        align-items: center;   
+        padding: 1rem;   
+    }
+
+    .del-modal-actions button {
+        width: 80%;
+        max-width: 200px;
+    }
+}
+
+
+@media (max-width: 480px) {
+    .del-modal-actions button {
+        width: 90%;
+        max-width: none;
+    }
+    
+    header h1 {
+        font-size: 1.25rem;
+    }
+
+    header p {
+        font-size: 0.8rem;
+    }
+
+    .actions-container {
+        padding: 1rem;
+    }
+
+    .actions-container button {
+        font-size: 0.85rem;
+        padding: 0.6rem 0;
+    }
+
+    .info-table th, .info-table td {
+        padding: 0.4rem 0.3rem;
+        font-size: 0.75rem;
+    }
+
+    .info-table img {
+        width: 30px;
+        height: 30px;
+    }
+
+    .upd-modal-content, .del-modal-content {
+        width: 95%;
+        margin: 25% auto;
+        padding: 0.8rem;
+    }
+}
+
+
+@media (max-width: 360px) {
+    header h1 {
+        font-size: 1.1rem;
+    }
+
+    header p {
+        font-size: 0.7rem;
+    }
+
+    .actions-container button {
+        font-size: 0.8rem;
+        padding: 0.5rem 0;
+    }
+
+    .info-table th, .info-table td {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.2rem;
+    }
+
+    .info-table img {
+        width: 25px;
+        height: 25px;
+    }
+}
+
+

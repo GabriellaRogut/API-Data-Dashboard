@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Store Dashboard | API</title>
+
+    <!-- to download pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
     <link rel="stylesheet" href="style.css?v=2">
 </head>
 
@@ -34,6 +41,7 @@
 
     <div class="actions-container">
         <button>Load Data</button>
+        <button id="downloadPdfBtn">Download PDF</button>
         <button>Add Data</button>
     </div>
 
@@ -61,8 +69,8 @@
                 <td>...</td>
                 <td>
                     <div class="table-actions">
-                        <button class="btn-del">Delete</button>
-                        <button class="btn-upd">Update</button>
+                        <button class="btn-del"><i class="fa-solid fa-trash"></i> Delete</button>
+                        <button class="btn-upd"><i class="fa-solid fa-file-pen"></i> Update</button>
                     </div>
                 </td>
             </tr>
@@ -107,8 +115,11 @@
                 </div>
                 <div class="form-group">
                     <label>Category</label>
-                    <input type="text" name="category" required>
+                    <select class="select-field" name="category" required id="updateCategorySelect">
+                        <option value="" disabled selected>Select a category</option>
+                    </select>
                 </div>
+
                 <div class="form-actions">
                     <div class="spinner"></div>
                     <button type="submit" class="btn-save">Save Changes</button>
@@ -144,8 +155,11 @@
                 </div>
                 <div class="form-group">
                     <label>Category</label>
-                    <input type="text" name="category" required>
+                    <select class="select-field" name="category" required id="addCategorySelect">
+                        <option value="" disabled selected>Select a category</option>
+                    </select>
                 </div>
+
                 <div class="form-actions">
                     <div class="spinner"></div>
                     <button type="submit" class="btn-save">Add Product</button>
