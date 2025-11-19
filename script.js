@@ -292,7 +292,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
     // ======= ADD PRODUCT =======
-    var addBtn = document.querySelector(".actions-container button:nth-child(2)"); // Add Data button
+    var addBtn = document.querySelector(".actions-container button:nth-child(3)"); // Add Data button
     var addModal = document.getElementById("addModal");
     var addForm = document.getElementById("addForm");
     var addCloseBtn = document.getElementById("addClose");
