@@ -387,13 +387,7 @@ header p {
     display: none;
 }
 
-
-/* Prevent page scroll when modal is open */
-body.modal-open {
-    overflow: hidden;
-}
-
-/* message */
+/* Success message */
 .mssg-box {
     display: none;
     position: fixed;
@@ -450,27 +444,11 @@ body.modal-open {
 /* MEDIA QUERIES */
 @media (max-width: 1200px) {
     .actions-container {
-        width: 80%;
         padding: 2rem;
     }
 
     .info-container {
         width: 95%;
-        padding: 1.5rem;
-    }
-
-    .info-table td:nth-child(7) {
-        width: 200px;
-    }
-
-    .upd-modal-content {
-        width: 90%;
-        padding: 1.5rem;
-    }
-
-    .del-modal-content {
-        width: 85%;
-        padding: 1.5rem;
     }
 }
 
@@ -485,28 +463,9 @@ body.modal-open {
         font-size: 0.8rem;
     }
 
-    /* Optional: make buttons square */
     .btn-del, .btn-upd {
         width: 30px;
         height: 30px;
-    }
-
-
-    header {
-        padding: 1.5rem 1rem;
-    }
-
-    header h1 {
-        font-size: 1.75rem;
-    }
-
-    header p {
-        font-size: 0.95rem;
-    }
-
-    .badges-container {
-        flex-wrap: wrap;
-        gap: 0.5rem;
     }
 
     .actions-container button {
@@ -519,10 +478,6 @@ body.modal-open {
         height: 50px;
     }
 
-    .info-table td:nth-child(7) {
-        width: 160px;
-    }
-
     .info-container {
         overflow-x: auto;
     }
@@ -530,28 +485,19 @@ body.modal-open {
 
 
 @media (max-width: 768px) {
-    header h1 {
-        font-size: 1.5rem;
-    }
-
-    header p {
-        font-size: 0.85rem;
-    }
-
     .actions-container {
         width: 95%;
         padding: 1.25rem;
     }
 
     .actions-container button {
-        width: 100%;
+        width: 90%;
         padding: 0.75rem 0;
         font-size: 0.9rem;
     }
 
     .badges-container {
         flex-direction: column;
-        gap: 0.4rem;
         align-items: center;
     }
 
@@ -566,7 +512,6 @@ body.modal-open {
     }
 
     .upd-modal-content, .del-modal-content {
-        width: 90%;
         margin: 20% auto;
         padding: 1rem;
     }
@@ -606,10 +551,6 @@ body.modal-open {
 
     header p {
         font-size: 0.8rem;
-    }
-
-    .actions-container {
-        padding: 1rem;
     }
 
     .actions-container button {

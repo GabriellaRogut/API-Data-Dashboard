@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
 
-    var loadBtn = document.querySelector(".actions-container button:first-child");
+    var loadBtn = document.getElementById("loadDataBtn");
     var tableBody = document.querySelector(".info-table tbody");
 
     var totalProductsBadge = document.getElementById("total-products");
@@ -10,14 +10,14 @@ document.addEventListener("DOMContentLoaded", function() {
     var errorsCount = 0;
 
 
-    // ======= UPDATE BADGES =======
+    // ----- UPDATE BADGES -----
     function updateBadges() {
         totalProductsBadge.textContent = "Total Products: " + tableBody.rows.length;
         errorsBadge.textContent = "Errors Today: " + errorsCount;
     }
 
 
-    // ======= CLOSE MESSAGE =======
+    // ----- CLOSE MESSAGE -----
     var messageBox = document.getElementById("message-box");
     var messageClose = document.getElementById("MessageClose");
 
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
 
-    // ======= LOAD PRODUCTS =======
+    // ----- LOAD PRODUCTS -----
     loadBtn.addEventListener("click", function() {
         activeCallsBadge.textContent = "Active API Calls: 1";
 
@@ -62,7 +62,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 `;
                 tableBody.appendChild(tr);
             }
-
             activeCallsBadge.textContent = "Active API Calls: 0";
             updateBadges();
         })
@@ -75,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
 
-    // ======= DELETE PRODUCT =======
+    // ----- DELETE PRODUCT -----
     var deleteModal = document.getElementById("deleteModal");
     var btnYes = deleteModal.querySelector(".btn-yes");
     var btnNo = deleteModal.querySelector(".btn-no");
@@ -83,6 +82,7 @@ document.addEventListener("DOMContentLoaded", function() {
     var mssgSuccess = document.getElementById("message-box");
 
     var rowToDelete = null;
+
 
     tableBody.addEventListener("click", function(e) {
         const btn = e.target.closest(".btn-del");
@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-
+    
     btnYes.addEventListener("click", function() {
         if (!rowToDelete) return;
 
@@ -118,9 +118,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     mssgSuccess.style.display = "none";
                     mssgSuccess.classList.remove("slide-out");
                 }, 600);
-
             }, 2000);
-
         })
         .catch(function(err) {
             console.log("Delete failed:", err);
@@ -151,7 +149,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     
-    // ======= UPDATE PRODUCT =======
+    // ----- UPDATE PRODUCT -----
     var updateModal = document.getElementById("updateModal");
     var updateForm = document.getElementById("updateForm");
     var updCloseBtn = updateModal.querySelector(".close");
@@ -162,7 +160,7 @@ document.addEventListener("DOMContentLoaded", function() {
     var currentRow = null;
     var currentProductId = null;
 
-    // ======= FETCH CATEGORIES & POPULATE SELECT =======
+    // fetch categories
     var categoriesMap = {}; // { "clothes": 1, "electronics": 2, ... }
 
     fetch("https://api.escuelajs.co/api/v1/categories")
@@ -180,7 +178,7 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .catch(err => console.log("Error fetching categories:", err));
 
-    // OPEN MODAL WITH PRODUCT DATA 
+    // open modal 
     tableBody.addEventListener("click", function(e) {
         const btn = e.target.closest(".btn-upd");
         if (btn) {
@@ -192,7 +190,7 @@ document.addEventListener("DOMContentLoaded", function() {
             updateForm.description.value = currentRow.cells[5].innerText;
             updateForm.image.value = currentRow.cells[1].querySelector("img").src;
 
-            // Set selected category in dropdown
+            // set selected category in dropdown
             var categoryName = currentRow.cells[4].innerText;
             for (var i = 0; i < updateCategorySelect.options.length; i++) {
                 if (updateCategorySelect.options[i].text === categoryName) {
@@ -200,7 +198,6 @@ document.addEventListener("DOMContentLoaded", function() {
                     break;
                 }
             }
-
             updateModal.style.display = "flex";
         }
     });
@@ -219,7 +216,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // SUBMIT UPDATE
+    // submit update
     updateForm.addEventListener("submit", function(e) {
         e.preventDefault();
 
@@ -291,8 +288,8 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
 
-    // ======= ADD PRODUCT =======
-    var addBtn = document.querySelector(".actions-container button:nth-child(3)"); // Add Data button
+    // ----- ADD PRODUCT -----
+    var addBtn = document.getElementById("addDataBtn");
     var addModal = document.getElementById("addModal");
     var addForm = document.getElementById("addForm");
     var addCloseBtn = document.getElementById("addClose");
@@ -300,7 +297,7 @@ document.addEventListener("DOMContentLoaded", function() {
     var addSpinner = addForm.querySelector(".spinner");
     var addCategorySelect = document.getElementById("addCategorySelect");
 
-    // Populate Add Category Dropdown
+    // fill in category dropdown
     fetch("https://api.escuelajs.co/api/v1/categories")
         .then(res => res.json())
         .then(categories => {
@@ -313,14 +310,14 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .catch(err => console.log("Error fetching categories:", err));
 
-    // ======= OPEN MODAL =======
+    // open modal
     addBtn.addEventListener("click", function() {
         addForm.reset();
         addErrorMsg.style.display = "none";
         addModal.style.display = "flex";
     });
 
-    // ======= CLOSE MODAL =======
+    // close modal
     addCloseBtn.addEventListener("click", function() {
         addModal.style.display = "none";
         addErrorMsg.style.display = "none";
@@ -333,7 +330,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // ======= SUBMIT ADD FORM =======
+    // submit add form
     addForm.addEventListener("submit", function(e) {
         e.preventDefault();
 
