@@ -226,7 +226,9 @@ document.addEventListener("DOMContentLoaded", () => {
             method: "PUT",
             headers: { "Content-Type": "application/json" }, // Tell server we're sending JSON
             body: JSON.stringify({  // Convert product data to JSON string
-                title, price, description,
+                title, 
+                price, 
+                description,
                 category: { id: categoryId },
                 images: [image]
             })
@@ -302,8 +304,11 @@ document.addEventListener("DOMContentLoaded", () => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                title, price, description,
-                categoryId, images: [image]
+                title, 
+                price, 
+                description,
+                categoryId, 
+                images: [image]
             })
         })
             .then(res => res.json())
