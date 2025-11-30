@@ -1,434 +1,358 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", () => {
 
-    var loadBtn = document.getElementById("loadDataBtn");
-    var tableBody = document.querySelector(".info-table tbody");
+    // -------------------------
+    // ELEMENTS
+    // -------------------------
+    const loadBtn = document.getElementById("loadDataBtn");
+    const addBtn = document.getElementById("addDataBtn");
+    const downloadPdfBtn = document.getElementById("downloadPdfBtn");
 
-    var totalProductsBadge = document.getElementById("total-products");
-    var activeCallsBadge = document.getElementById("active-calls");
-    var errorsBadge = document.getElementById("errors-today");
+    const tableBody = document.querySelector(".info-table tbody");
+    const totalProductsBadge = document.getElementById("total-products");
+    const activeCallsBadge = document.getElementById("active-calls");
+    const errorsBadge = document.getElementById("errors-today");
 
-    var errorsCount = 0;
+    let errorsCount = 0;
+
+    // Success message box
+    const msgBox = document.getElementById("message-box");
+    const msgClose = document.getElementById("MessageClose");
+    msgClose.addEventListener("click", () => (msgBox.style.display = "none"));
 
 
-    // ----- UPDATE BADGES -----
+    // -------------------------
+    // BADGE UPDATES
+    // -------------------------
     function updateBadges() {
         totalProductsBadge.textContent = "Total Products: " + tableBody.rows.length;
         errorsBadge.textContent = "Errors Today: " + errorsCount;
     }
 
+    function setActiveCalls(num) {
+        activeCallsBadge.textContent = "Active API Calls: " + num;
+    }
 
-    // ----- CLOSE MESSAGE -----
-    var messageBox = document.getElementById("message-box");
-    var messageClose = document.getElementById("MessageClose");
+    function showSuccess(message) {
+        // Show a temporary success message
+        msgBox.style.display = "block";
+        msgBox.querySelector(".mssg").innerHTML = 
+            `<span style="color:green;">&#10004;</span> ${message}`;
 
-    messageClose.addEventListener("click", function () {
-        messageBox.style.display = "none";
-    });
+        setTimeout(() => {
+            msgBox.classList.add("slide-out");
+            setTimeout(() => {
+                msgBox.classList.remove("slide-out");
+                msgBox.style.display = "none";
+            }, 600);
+        }, 2000);
+    }
 
 
-    // ----- LOAD PRODUCTS -----
-    loadBtn.addEventListener("click", function() {
-        activeCallsBadge.textContent = "Active API Calls: 1";
+    // -------------------------
+    // LOAD PRODUCTS
+    // -------------------------
+    loadBtn.addEventListener("click", () => {
+        setActiveCalls(1); // Indicate an API call is in progress
 
+        // Fetch product list from API
         fetch("https://api.escuelajs.co/api/v1/products")
-        .then(function(res) {
-            return res.json();
-        })
-        .then(function(products) {
-            tableBody.innerHTML = "";
+            .then(res => res.json()) // Convert response to JSON
+            .then(products => {
+                tableBody.innerHTML = ""; // Clear previous rows
 
-            for (var i = 0; i < products.length; i++) {
-                var p = products[i];
-                var tr = document.createElement("tr");
-                var image = "";
+                // Add each product to the table
+                products.forEach(p => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${p.id}</td>
+                        <td><img src="${p.images?.[0] || ""}" alt="${p.title}"></td>
+                        <td>${p.title}</td>
+                        <td>$${p.price}</td>
+                        <td>${p.category?.name || ""}</td>
+                        <td>${p.description}</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="btn-del"><i class="fa-solid fa-trash"></i> Delete</button>
+                                <button class="btn-upd"><i class="fa-solid fa-file-pen"></i> Update</button>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
 
-                if (p.images && p.images.length > 0) {
-                    image = p.images[0];
-                }
-
-                tr.innerHTML = `
-                    <td>${p.id}</td>
-                    <td><img src="${image}" alt="${p.title}"></td>
-                    <td>${p.title}</td>
-                    <td>$${p.price}</td>
-                    <td>${p.category && p.category.name ? p.category.name : ""}</td>
-                    <td>${p.description}</td>
-                    <td>
-                        <div class="table-actions">
-                            <button class="btn-del"><i class="fa-solid fa-trash"></i> Delete</button>
-                            <button class="btn-upd"><i class="fa-solid fa-file-pen"></i> Update</button>
-                        </div>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
-            }
-            activeCallsBadge.textContent = "Active API Calls: 0";
-            updateBadges();
-        })
-        .catch(function(err) {
-            console.log("Error loading data:", err);
-            errorsCount++;
-            activeCallsBadge.textContent = "Active API Calls: 0";
-            updateBadges();
-        });
+                updateBadges(); // Update totals and errors
+            })
+            .catch(err => {
+                console.error("Error loading products", err);
+                errorsCount++; // Increase error count if fetch fails
+                updateBadges();
+            })
+            .finally(() => setActiveCalls(0)); // End of API call
     });
 
 
-    // ----- DELETE PRODUCT -----
-    var deleteModal = document.getElementById("deleteModal");
-    var btnYes = deleteModal.querySelector(".btn-yes");
-    var btnNo = deleteModal.querySelector(".btn-no");
-    var closeBtn = deleteModal.querySelector(".close");
-    var mssgSuccess = document.getElementById("message-box");
+    // -------------------------
+    // DELETE PRODUCT
+    // -------------------------
+    const deleteModal = document.getElementById("deleteModal");
+    const btnDeleteYes = deleteModal.querySelector(".btn-yes");
+    const btnDeleteNo = deleteModal.querySelector(".btn-no");
+    const btnDeleteClose = deleteModal.querySelector(".close");
 
-    var rowToDelete = null;
+    let rowToDelete = null;
 
-
-    tableBody.addEventListener("click", function(e) {
+    // Open delete modal
+    tableBody.addEventListener("click", (e) => {
         const btn = e.target.closest(".btn-del");
-        if (btn) {
-            rowToDelete = btn.closest("tr");
-            deleteModal.style.display = "flex";
-        }
+        if (!btn) return;
+
+        rowToDelete = btn.closest("tr"); // Save which row to delete
+        deleteModal.style.display = "flex";
     });
 
-    
-    btnYes.addEventListener("click", function() {
+    btnDeleteNo.onclick = closeDeleteModal;
+    btnDeleteClose.onclick = closeDeleteModal;
+
+    function closeDeleteModal() {
+        deleteModal.style.display = "none";
+        rowToDelete = null;
+    }
+
+    // Confirm delete
+    btnDeleteYes.addEventListener("click", () => {
         if (!rowToDelete) return;
 
-        var productId = rowToDelete.cells[0].innerText;
-        activeCallsBadge.textContent = "Active API Calls: 1";
+        const id = rowToDelete.cells[0].innerText; // Get product ID
+        setActiveCalls(1);
 
-        fetch("https://api.escuelajs.co/api/v1/products/" + productId, {
-            method: "DELETE"
-        })
-        .then(function() {
-            rowToDelete.remove();
-            deleteModal.style.display = "none";
-            rowToDelete = null;
-            updateBadges();
-
-            mssgSuccess.style.display = "block";
-            mssgSuccess.querySelector(".mssg").innerHTML = "<span style='color: rgb(135, 177, 135);'>&#10004;</span> Item Deleted Successfully.";
-
-            setTimeout(() => {
-                mssgSuccess.classList.add("slide-out");
-
-                setTimeout(() => {
-                    mssgSuccess.style.display = "none";
-                    mssgSuccess.classList.remove("slide-out");
-                }, 600);
-            }, 2000);
-        })
-        .catch(function(err) {
-            console.log("Delete failed:", err);
-            errorsCount++;
-            updateBadges();
-        })
-        .finally(function() {
-            activeCallsBadge.textContent = "Active API Calls: 0";
-        });
+        // Send DELETE request to API
+        fetch(`https://api.escuelajs.co/api/v1/products/${id}`, { method: "DELETE" })
+            .then(() => {
+                rowToDelete.remove(); // Remove row from table
+                showSuccess("Item Deleted Successfully.");
+                updateBadges();
+                closeDeleteModal();
+            })
+            .catch(err => {
+                console.error("Delete failed:", err);
+                errorsCount++;
+                updateBadges();
+            })
+            .finally(() => setActiveCalls(0));
     });
 
 
-    btnNo.addEventListener("click", function() {
-        deleteModal.style.display = "none";
-        rowToDelete = null;
-    });
+    // -------------------------
+    // UPDATE PRODUCT
+    // -------------------------
+    const updateModal = document.getElementById("updateModal");
+    const updateForm = document.getElementById("updateForm");
+    const updateClose = updateModal.querySelector(".close");
+    const updateError = updateForm.querySelector(".error-msg");
+    const updateSpinner = updateForm.querySelector(".spinner");
+    const updateCategorySelect = document.getElementById("updateCategorySelect");
 
-    closeBtn.addEventListener("click", function() {
-        deleteModal.style.display = "none";
-        rowToDelete = null;
-    });
+    let currentRow = null;
+    let currentProductId = null;
 
-    window.addEventListener("click", function(e) {
-        if (e.target === deleteModal) {
-            deleteModal.style.display = "none";
-            rowToDelete = null;
-        }
-    });
-
-    
-    // ----- UPDATE PRODUCT -----
-    var updateModal = document.getElementById("updateModal");
-    var updateForm = document.getElementById("updateForm");
-    var updCloseBtn = updateModal.querySelector(".close");
-    var errorMsg = updateForm.querySelector(".error-msg");
-    var spinner = updateForm.querySelector(".spinner");
-    var updateCategorySelect = document.getElementById("updateCategorySelect");
-
-    var currentRow = null;
-    var currentProductId = null;
-
-    // fetch categories
-    var categoriesMap = {}; // { "clothes": 1, "electronics": 2, ... }
-
+    // Load category options for dropdowns
     fetch("https://api.escuelajs.co/api/v1/categories")
         .then(res => res.json())
         .then(categories => {
             categories.forEach(cat => {
-                categoriesMap[cat.name.toLowerCase()] = cat.id;
-
-                // update modal select
-                var option = document.createElement("option");
-                option.value = cat.id;
-                option.textContent = cat.name;
-                updateCategorySelect.appendChild(option);
+                updateCategorySelect.innerHTML += 
+                    `<option value="${cat.id}">${cat.name}</option>`;
+                addCategorySelect.innerHTML +=
+                    `<option value="${cat.id}">${cat.name}</option>`;
             });
-        })
-        .catch(err => console.log("Error fetching categories:", err));
+        });
 
-    // open modal 
-    tableBody.addEventListener("click", function(e) {
+    // Open update modal with current row's data
+    tableBody.addEventListener("click", (e) => {
         const btn = e.target.closest(".btn-upd");
-        if (btn) {
-            currentRow = btn.closest("tr");
-            currentProductId = currentRow.cells[0].innerText;
+        if (!btn) return;
 
-            updateForm.title.value = currentRow.cells[2].innerText;
-            updateForm.price.value = parseFloat(currentRow.cells[3].innerText.replace("$", ""));
-            updateForm.description.value = currentRow.cells[5].innerText;
-            updateForm.image.value = currentRow.cells[1].querySelector("img").src;
+        currentRow = btn.closest("tr");
+        currentProductId = currentRow.cells[0].innerText;
 
-            // set selected category in dropdown
-            var categoryName = currentRow.cells[4].innerText;
-            for (var i = 0; i < updateCategorySelect.options.length; i++) {
-                if (updateCategorySelect.options[i].text === categoryName) {
-                    updateCategorySelect.selectedIndex = i;
-                    break;
-                }
+        // Fill form with existing data
+        updateForm.title.value = currentRow.cells[2].innerText;
+        updateForm.price.value = currentRow.cells[3].innerText.replace("$", "");
+        updateForm.description.value = currentRow.cells[5].innerText;
+        updateForm.image.value = currentRow.cells[1].querySelector("img").src;
+
+        // Get the category name from the table row
+        const categoryName = currentRow.cells[4].innerText;
+
+        // Loop through all options in the select element
+        for (let i = 0; i < updateCategorySelect.options.length; i++) {
+            if (updateCategorySelect.options[i].text === categoryName) {
+                updateCategorySelect.value = updateCategorySelect.options[i].value;
+                break;
             }
-            updateModal.style.display = "flex";
         }
+        updateModal.style.display = "flex";
     });
 
-
-    // close modal
-    updCloseBtn.addEventListener("click", function() {
+    updateClose.onclick = () => {
         updateModal.style.display = "none";
-        errorMsg.style.display = "none";
-    });
+        updateError.style.display = "none";
+    };
 
-    window.addEventListener("click", function(e) {
-        if (e.target === updateModal) {
-            updateModal.style.display = "none";
-            errorMsg.style.display = "none";
-        }
-    });
+    // Submit updated product
+    updateForm.addEventListener("submit", (e) => {
+        e.preventDefault(); // Prevent the default form submission (page reload)
 
-    // submit update
-    updateForm.addEventListener("submit", function(e) {
-        e.preventDefault();
+        // Get values from the form fields
+        const title = updateForm.title.value.trim();
+        const price = parseFloat(updateForm.price.value);
+        const description = updateForm.description.value.trim();
+        const image = updateForm.image.value.trim();
+        const categoryId = parseInt(updateCategorySelect.value);
+        const categoryText = updateCategorySelect.options[updateCategorySelect.selectedIndex].text;
 
-        var title = updateForm.title.value.trim();
-        var price = parseFloat(updateForm.price.value);
-        var description = updateForm.description.value.trim();
-        var image = updateForm.image.value.trim();
-        var categoryId = parseInt(updateCategorySelect.value);
-        var categoryName = updateCategorySelect.options[updateCategorySelect.selectedIndex].text;
-
-        if (!title || !description || !image || isNaN(price) || price <= 0) {
-            errorMsg.textContent = "Please fill all fields correctly.";
-            errorMsg.style.display = "block";
+        if (!title || !image || !description || price <= 0) {
+            updateError.textContent = "Please fill all fields correctly.";
+            updateError.style.display = "block";
             return;
         }
 
-        spinner.style.display = "inline-block";
-        errorMsg.style.display = "none";
-        activeCallsBadge.textContent = "Active API Calls: 1";
+        updateError.style.display = "none";
+        updateSpinner.style.display = "inline-block";
+        setActiveCalls(1);
 
+        // Send PUT request to update product
         fetch(`https://api.escuelajs.co/api/v1/products/${currentProductId}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                title: title,
-                price: price,
-                description: description,
+            headers: { "Content-Type": "application/json" }, // Tell server we're sending JSON
+            body: JSON.stringify({  // Convert product data to JSON string
+                title, price, description,
                 category: { id: categoryId },
                 images: [image]
             })
         })
-        .then(function(res) {
-            if (!res.ok) throw new Error("Update failed");
-            return res.json();
-        })
-        .then(function(updatedProduct) {
-            // Update table row
-            currentRow.cells[1].querySelector("img").src = updatedProduct.images[0] || "";
-            currentRow.cells[2].innerText = updatedProduct.title;
-            currentRow.cells[3].innerText = "$" + updatedProduct.price;
-            currentRow.cells[4].innerText = categoryName;
-            currentRow.cells[5].innerText = updatedProduct.description;
+        .then(res => res.json())  // Convert response from API to JavaScript object
+        .then(updated => {
+            // Update table
+            currentRow.cells[1].querySelector("img").src = updated.images[0]; 
+            currentRow.cells[2].innerText = updated.title;
+            currentRow.cells[3].innerText = "$" + updated.price;
+            currentRow.cells[4].innerText = categoryText;
+            currentRow.cells[5].innerText = updated.description;
 
             updateModal.style.display = "none";
             updateBadges();
-
-            mssgSuccess.style.display = "block";
-            mssgSuccess.querySelector(".mssg").innerHTML = "<span style='color: rgb(135, 177, 135);'>&#10004;</span> Item Updated Successfully.";
-
-            setTimeout(() => {
-                mssgSuccess.classList.add("slide-out");
-                setTimeout(() => {
-                    mssgSuccess.style.display = "none";
-                    mssgSuccess.classList.remove("slide-out");
-                }, 600);
-            }, 2000);
+            showSuccess("Item Updated Successfully.");
         })
-        .catch(function(err) {
-            console.log(err);
-            errorsCount++;
-            errorMsg.innerHTML = "&#9888; Error updating product. Please try again.";
-            errorMsg.style.display = "block";
+        .catch(() => {
+            updateError.innerHTML = "&#9888; Error updating product.";
+            updateError.style.display = "block";
         })
-        .finally(function() {
-            spinner.style.display = "none";
-            activeCallsBadge.textContent = "Active API Calls: 0";
-            updateBadges();
+        .finally(() => {
+            updateSpinner.style.display = "none";
+            setActiveCalls(0);
         });
     });
 
 
-    // ----- ADD PRODUCT -----
-    var addBtn = document.getElementById("addDataBtn");
-    var addModal = document.getElementById("addModal");
-    var addForm = document.getElementById("addForm");
-    var addCloseBtn = document.getElementById("addClose");
-    var addErrorMsg = addForm.querySelector(".error-msg");
-    var addSpinner = addForm.querySelector(".spinner");
-    var addCategorySelect = document.getElementById("addCategorySelect");
+    // -------------------------
+    // ADD PRODUCT
+    // -------------------------
+    const addModal = document.getElementById("addModal");
+    const addForm = document.getElementById("addForm");
+    const addClose = document.getElementById("addClose");
+    const addError = addForm.querySelector(".error-msg");
+    const addSpinner = addForm.querySelector(".spinner");
+    const addCategorySelect = document.getElementById("addCategorySelect");
 
-    // fill in category dropdown
-    fetch("https://api.escuelajs.co/api/v1/categories")
-        .then(res => res.json())
-        .then(categories => {
-            categories.forEach(cat => {
-                var option = document.createElement("option");
-                option.value = cat.id;
-                option.textContent = cat.name;
-                addCategorySelect.appendChild(option);
-            });
-        })
-        .catch(err => console.log("Error fetching categories:", err));
-
-    // open modal
-    addBtn.addEventListener("click", function() {
+    // Open add modal
+    addBtn.onclick = () => {
         addForm.reset();
-        addErrorMsg.style.display = "none";
         addModal.style.display = "flex";
-    });
+        addError.style.display = "none";
+    };
 
-    // close modal
-    addCloseBtn.addEventListener("click", function() {
+    addClose.onclick = () => {
         addModal.style.display = "none";
-        addErrorMsg.style.display = "none";
-    });
+        addError.style.display = "none";
+    };
 
-    window.addEventListener("click", function(e) {
-        if (e.target === addModal) {
-            addModal.style.display = "none";
-            addErrorMsg.style.display = "none";
-        }
-    });
-
-    // submit add form
-    addForm.addEventListener("submit", function(e) {
+    // Submit new product
+    addForm.addEventListener("submit", (e) => {
         e.preventDefault();
 
-        var title = addForm.title.value.trim();
-        var price = parseFloat(addForm.price.value);
-        var description = addForm.description.value.trim();
-        var image = addForm.image.value.trim();
-        var categoryId = parseInt(addCategorySelect.value);
-        var categoryName = addCategorySelect.options[addCategorySelect.selectedIndex].text;
+        const title = addForm.title.value.trim();
+        const price = parseFloat(addForm.price.value);
+        const description = addForm.description.value.trim();
+        const image = addForm.image.value.trim();
+        const categoryId = parseInt(addCategorySelect.value);
+        const categoryText = addCategorySelect.options[addCategorySelect.selectedIndex].text;
 
-        if (!title || !description || !image || isNaN(price) || price <= 0) {
-            addErrorMsg.textContent = "Please fill all fields correctly.";
-            addErrorMsg.style.display = "block";
+        if (!title || !image || !description || price <= 0) {
+            addError.textContent = "Please fill all fields correctly.";
+            addError.style.display = "block";
             return;
         }
 
         addSpinner.style.display = "inline-block";
-        addErrorMsg.style.display = "none";
-        activeCallsBadge.textContent = "Active API Calls: 1";
+        setActiveCalls(1);
 
-        fetch("https://api.escuelajs.co/api/v1/products/", {
+        // Send POST request to add product
+        fetch("https://api.escuelajs.co/api/v1/products", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                title: title,
-                price: price,
-                description: description,
-                categoryId: categoryId,
-                images: [image]
+                title, price, description,
+                categoryId, images: [image]
             })
         })
-        .then(res => {
-            if (!res.ok) throw new Error("Add product failed");
-            return res.json();
-        })
-        .then(newProduct => {
-            var tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td>${newProduct.id}</td>
-                <td><img src="${newProduct.images[0] || ''}" alt="${newProduct.title}"></td>
-                <td>${newProduct.title}</td>
-                <td>$${newProduct.price}</td>
-                <td>${categoryName}</td>
-                <td>${newProduct.description}</td>
-                <td>
-                    <div class="table-actions">
-                        <button class="btn-del"><i class="fa-solid fa-trash"></i> Delete</button>
-                        <button class="btn-upd"><i class="fa-solid fa-file-pen"></i> Update</button>
-                    </div>
-                </td>
-            `;
-            tableBody.appendChild(tr);
+            .then(res => res.json())
+            .then(newProduct => {
+                // Add new product row to table
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${newProduct.id}</td>
+                    <td><img src="${newProduct.images?.[0] || ""}" alt=""></td>
+                    <td>${newProduct.title}</td>
+                    <td>$${newProduct.price}</td>
+                    <td>${categoryText}</td>
+                    <td>${newProduct.description}</td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="btn-del">Delete</button>
+                            <button class="btn-upd">Update</button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
 
-            addModal.style.display = "none";
-            updateBadges();
-
-            mssgSuccess.style.display = "block";
-            mssgSuccess.querySelector(".mssg").innerHTML = "<span style='color: rgb(135, 177, 135);'>&#10004;</span> Item Added Successfully.";
-
-            setTimeout(() => {
-                mssgSuccess.classList.add("slide-out");
-                setTimeout(() => {
-                    mssgSuccess.style.display = "none";
-                    mssgSuccess.classList.remove("slide-out");
-                }, 600);
-            }, 2000);
-        })
-        .catch(err => {
-            console.log(err);
-            errorsCount++;
-            addErrorMsg.innerHTML = "&#9888; Error adding product. Please try again.";
-            addErrorMsg.style.display = "block";
-            updateBadges();
-        })
-        .finally(() => {
-            addSpinner.style.display = "none";
-            activeCallsBadge.textContent = "Active API Calls: 0";
-        });
+                addModal.style.display = "none";
+                updateBadges();
+                showSuccess("Item Added Successfully.");
+            })
+            .catch(() => {
+                addError.innerHTML = "&#9888; Error adding product.";
+                addError.style.display = "block";
+                errorsCount++;
+            })
+            .finally(() => {
+                addSpinner.style.display = "none";
+                setActiveCalls(0);
+            });
     });
 
 
-
-    // download pdf
-    const downloadPdfBtn = document.getElementById("downloadPdfBtn");
-
-    downloadPdfBtn.addEventListener("click", function() {
+    // -------------------------
+    // DOWNLOAD PDF
+    // -------------------------
+    downloadPdfBtn.addEventListener("click", () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        // Gather table headers
-        const headers = Array.from(document.querySelectorAll(".info-table th")).map(th => th.innerText);
+        const headers = [...document.querySelectorAll(".info-table th")].map(th => th.innerText);
+        const rows = [...document.querySelectorAll(".info-table tbody tr")]
+            .map(tr => [...tr.cells].map(td => td.innerText));
 
-        // Gather table rows
-        const rows = Array.from(document.querySelectorAll(".info-table tbody tr")).map(tr => {
-            return Array.from(tr.cells).map(td => td.innerText);
-        });
-
-        // Generate table in PDF
         doc.autoTable({
             head: [headers],
             body: rows,
@@ -439,7 +363,4 @@ document.addEventListener("DOMContentLoaded", function() {
         doc.save("products.pdf");
     });
 
-
 });
-
-
